@@ -4,7 +4,7 @@ import * as Tone from "tone";
 
 // A simple grid: 4 Measures x 4 Beats = 16 Steps
 // Each step is a Quarter Note ("4n")
-const STEPS = 32;
+const STEPS = 100;
 // Full chromatic scale from C2 to C7 (61 notes)
 const ROWS = [
   "C7",
