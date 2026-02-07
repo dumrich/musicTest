@@ -25,6 +25,13 @@ build/
 .coverage
 htmlcov/
 
+# Magenta model checkpoints (large binary files)
+models/
+*.mag
+
+# Generated MIDI output
+output/
+
 # OS
 .DS_Store
 Thumbs.db
