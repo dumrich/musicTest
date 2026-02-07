@@ -43,6 +43,8 @@ export default function PianoRollView() {
     addMidiClip,
     updateMidiClip,
     addArrangementClip,
+    undo,
+    canUndo,
   } = useProjectStore();
   const [isDragging, setIsDragging] = useState(false);
   const [lastProcessedCell, setLastProcessedCell] = useState<string | null>(null);
@@ -69,6 +71,24 @@ export default function PianoRollView() {
   const noteHeight = 24;
   const totalNotesHeight = NOTES.length * noteHeight;
   const ticksPerStep = ticksPerBar / SNAPGRID_TO_FRACTION[snapGrid];
+
+  // Handle erasing all notes
+  const handleEraseAll = () => {
+    if (!activeClip) return;
+    updateMidiClip(activeClip.id, { notes: [] });
+  };
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undo]);
 
   // Ensure we have a clip to work with
   const ensureActiveClip = () => {
@@ -277,6 +297,21 @@ export default function PianoRollView() {
           {tool.charAt(0).toUpperCase() + tool.slice(1)}
         </button>
         ))}
+        <button 
+          className="px-3 py-1 rounded text-sm bg-red-900 hover:bg-red-800 text-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed ml-2"
+          onClick={handleEraseAll}
+          disabled={!activeClip || activeClip.notes.length === 0}
+        >
+          Erase All
+        </button>
+        <button 
+          className="px-3 py-1 rounded text-sm bg-zinc-800 hover:bg-zinc-700 text-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={undo}
+          disabled={!canUndo()}
+          title="Undo (⌘Z)"
+        >
+          Undo
+        </button>
       </div>
 
       {/* Piano Roll Grid */}
