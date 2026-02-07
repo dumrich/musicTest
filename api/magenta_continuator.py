@@ -9,6 +9,8 @@ jazz-styled primer will produce a jazz-styled continuation.
 Models are loaded once at startup and kept in memory for fast generation.
 """
 
+from __future__ import annotations  # Defer type annotation evaluation (PEP 563)
+
 import logging
 import os
 import time
