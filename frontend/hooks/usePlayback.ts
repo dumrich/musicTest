@@ -12,8 +12,9 @@ function ticksToBars(ticks: number): number {
 }
 
 // Convert MIDI note number to note name  
+// Add 12 to raise by one octave (12 semitones = 1 octave)
 function midiToNoteName(midiNote: number): string {
-  return Tone.Frequency(midiNote, 'midi').toNote();
+  return Tone.Frequency(midiNote + 12, 'midi').toNote();
 }
 
 // Convert MIDI velocity (0-127) to gain (0-1)
