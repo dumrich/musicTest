@@ -49,7 +49,7 @@ export default function TrackBrowserModal({ isOpen, onClose }: TrackBrowserModal
       mute: false,
       solo: false,
       arm: false,
-      volume: 0.8,
+      volume: 0.5,
       pan: 0,
     });
     onClose();

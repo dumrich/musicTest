@@ -9,7 +9,7 @@ import { useProjectStore } from '@/stores/projectStore';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 export default function DAW() {
-  const { project, addTrack } = useProjectStore();
+  const { project, addTrack, selectedTrackId, setSelectedTrackId } = useProjectStore();
   useKeyboardShortcuts();
 
   // Initialize with a default track if none exist
@@ -26,11 +26,18 @@ export default function DAW() {
         mute: false,
         solo: false,
         arm: false,
-        volume: 0.8,
+        volume: 0.5,
         pan: 0,
       });
     }
   }, [project, addTrack]);
+
+  // Auto-select first track if none is selected
+  useEffect(() => {
+    if (project && project.tracks.length > 0 && !selectedTrackId) {
+      setSelectedTrackId(project.tracks[0].id);
+    }
+  }, [project, selectedTrackId, setSelectedTrackId]);
 
   return (
     <div className="h-screen w-screen bg-zinc-900 text-white font-sans flex flex-col overflow-hidden">

@@ -2,11 +2,14 @@
 
 import { useProjectStore } from '@/stores/projectStore';
 import { useState } from 'react';
+import { Settings } from 'lucide-react';
+import TrackSettingsModal from './TrackSettingsMenu';
 
 export default function PlaylistView() {
-  const { project, playheadPosition } = useProjectStore();
+  const { project, playheadPosition, updateTrack, selectedTrackId, setSelectedTrackId } = useProjectStore();
   const [zoom, setZoom] = useState(1);
   const [scrollX, setScrollX] = useState(0);
+  const [settingsTrackId, setSettingsTrackId] = useState<string | null>(null);
 
   if (!project) return null;
 
@@ -56,16 +59,62 @@ export default function PlaylistView() {
         {project.tracks.map((track) => {
           const trackClips = project.arrangementClips.filter((c) => c.trackId === track.id);
           return (
-            <div key={track.id} className="h-20 border-b border-zinc-800 flex">
+            <div 
+              key={track.id} 
+              className={`h-20 border-b border-zinc-800 flex cursor-pointer transition ${
+                selectedTrackId === track.id ? 'bg-zinc-950' : ''
+              }`}
+              onClick={() => setSelectedTrackId(track.id)}
+            >
               {/* Track Header */}
-              <div className="w-48 bg-zinc-900 border-r border-zinc-700 p-2 flex items-center gap-2 flex-shrink-0">
+              <div className={`w-48 border-r border-zinc-700 p-2 flex items-center gap-2 flex-shrink-0 relative transition ${
+                selectedTrackId === track.id 
+                  ? 'bg-zinc-800 border-blue-500' 
+                  : 'bg-zinc-900'
+              }`}>
                 <div
                   className="w-4 h-4 rounded"
                   style={{ backgroundColor: track.color }}
                 />
-                <span className="text-sm text-white flex-1">{track.name}</span>
-                <button className="text-zinc-400 hover:text-white">M</button>
-                <button className="text-zinc-400 hover:text-white">S</button>
+                <span className="text-sm text-white flex-1 truncate">{track.name}</span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    updateTrack(track.id, { mute: !track.mute });
+                  }}
+                  className={`text-xs font-medium transition px-1.5 py-0.5 rounded ${
+                    track.mute
+                      ? 'bg-red-600 text-white'
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                  }`}
+                  title="Mute"
+                >
+                  M
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    updateTrack(track.id, { solo: !track.solo });
+                  }}
+                  className={`text-xs font-medium transition px-1.5 py-0.5 rounded ${
+                    track.solo
+                      ? 'bg-yellow-600 text-white'
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                  }`}
+                  title="Solo"
+                >
+                  S
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSettingsTrackId(track.id);
+                  }}
+                  className="text-zinc-400 hover:text-white transition p-1"
+                  title="Track Settings"
+                >
+                  <Settings className="w-4 h-4" />
+                </button>
               </div>
 
               {/* Track Content */}
@@ -129,6 +178,13 @@ export default function PlaylistView() {
           +
         </button>
       </div>
+
+      {/* Track Settings Modal */}
+      <TrackSettingsModal
+        isOpen={settingsTrackId !== null}
+        track={settingsTrackId ? project.tracks.find((t) => t.id === settingsTrackId) || null : null}
+        onClose={() => setSettingsTrackId(null)}
+      />
     </div>
   );
 }

@@ -6,6 +6,7 @@ interface ProjectState {
   currentView: ViewMode;
   selectedTool: Tool;
   selection: Selection;
+  selectedTrackId: string | null;
   playheadPosition: number; // in bars
   loopStart: number | null;
   loopEnd: number | null;
@@ -18,6 +19,7 @@ interface ProjectState {
   setCurrentView: (view: ViewMode) => void;
   setSelectedTool: (tool: Tool) => void;
   setSelection: (selection: Selection) => void;
+  setSelectedTrackId: (trackId: string | null) => void;
   setPlayheadPosition: (position: number) => void;
   setLoopRegion: (start: number | null, end: number | null) => void;
   setIsPlaying: (playing: boolean) => void;
@@ -56,11 +58,12 @@ const createDefaultProject = (): Project => ({
   },
 });
 
-export const useProjectStore = create<ProjectState>((set) => ({
+export const useProjectStore = create<ProjectState>((set, get) => ({
   project: createDefaultProject(),
   currentView: 'playlist',
   selectedTool: 'select',
   selection: { clips: [], notes: [], track: null },
+  selectedTrackId: null,
   playheadPosition: 0,
   loopStart: null,
   loopEnd: null,
@@ -68,10 +71,14 @@ export const useProjectStore = create<ProjectState>((set) => ({
   isRecording: false,
   metronomeEnabled: false,
   
-  setProject: (project) => set({ project }),
+  setProject: (project) => {
+    const firstTrackId = project.tracks.length > 0 ? project.tracks[0].id : null;
+    set({ project, selectedTrackId: firstTrackId });
+  },
   setCurrentView: (view) => set({ currentView: view }),
   setSelectedTool: (tool) => set({ selectedTool: tool }),
   setSelection: (selection) => set({ selection }),
+  setSelectedTrackId: (trackId) => set({ selectedTrackId: trackId }),
   setPlayheadPosition: (position) => set({ playheadPosition: position }),
   setLoopRegion: (start, end) => set({ loopStart: start, loopEnd: end }),
   setIsPlaying: (playing) => set({ isPlaying: playing }),
@@ -80,10 +87,13 @@ export const useProjectStore = create<ProjectState>((set) => ({
   
   addTrack: (track) => set((state) => {
     if (!state.project) return state;
+    const newTracks = [...state.project.tracks, track];
+    // Auto-select the first track if none is selected
+    const newSelectedTrackId = state.selectedTrackId || track.id;
     return {
       project: {
         ...state.project,
-        tracks: [...state.project.tracks, track],
+        tracks: newTracks,
         mixer: {
           ...state.project.mixer,
           channels: [
@@ -91,7 +101,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
             {
               id: `mixer-${track.id}`,
               trackId: track.id,
-              volume: 0.8,
+              volume: 0.5,
               pan: 0,
               mute: false,
               solo: false,
@@ -101,6 +111,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
           ],
         },
       },
+      selectedTrackId: newSelectedTrackId,
     };
   }),
   
@@ -118,16 +129,23 @@ export const useProjectStore = create<ProjectState>((set) => ({
   
   deleteTrack: (trackId) => set((state) => {
     if (!state.project) return state;
+    const remainingTracks = state.project.tracks.filter((t) => t.id !== trackId);
+    // If deleted track was selected, select the first remaining track or null
+    let newSelectedTrackId = state.selectedTrackId;
+    if (state.selectedTrackId === trackId) {
+      newSelectedTrackId = remainingTracks.length > 0 ? remainingTracks[0].id : null;
+    }
     return {
       project: {
         ...state.project,
-        tracks: state.project.tracks.filter((t) => t.id !== trackId),
+        tracks: remainingTracks,
         arrangementClips: state.project.arrangementClips.filter((c) => c.trackId !== trackId),
         mixer: {
           ...state.project.mixer,
           channels: state.project.mixer.channels.filter((c) => c.trackId !== trackId),
         },
       },
+      selectedTrackId: newSelectedTrackId,
     };
   }),
   

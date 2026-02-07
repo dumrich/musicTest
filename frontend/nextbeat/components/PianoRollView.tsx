@@ -17,11 +17,25 @@ NOTES.forEach((note, index) => {
 });
 
 export default function PianoRollView() {
-  const { project, selectedTool } = useProjectStore();
+  const { project, selectedTool, selectedTrackId } = useProjectStore();
   const [zoom, setZoom] = useState(1);
   const [selectedClip, setSelectedClip] = useState<string | null>(null);
 
   if (!project) return null;
+
+  const selectedTrack = selectedTrackId ? project.tracks.find((t) => t.id === selectedTrackId) : null;
+  
+  // Find the first MIDI clip for the selected track
+  const trackMidiClips = selectedTrack
+    ? project.arrangementClips
+        .filter((c) => c.trackId === selectedTrack.id && c.clipType === 'midi')
+        .map((c) => project.midiClips.find((mc) => mc.id === c.clipDataId))
+        .filter((mc): mc is NonNullable<typeof mc> => mc !== undefined)
+    : [];
+  
+  const activeClip = selectedClip 
+    ? project.midiClips.find((c) => c.id === selectedClip)
+    : trackMidiClips[0] || null;
 
   const ticksPerBar = 1920;
   const pixelsPerBar = 100 * zoom;
@@ -29,18 +43,16 @@ export default function PianoRollView() {
   const totalNotesHeight = NOTES.length * noteHeight;
 
   const handleNoteClick = (noteIndex: number, tick: number) => {
-    if (selectedTool === 'draw' && selectedClip) {
-      // Add note logic
-    } else if (selectedTool === 'erase') {
+    if (selectedTool === 'draw' && activeClip) {
+      // Add note logic - will need to create clip if none exists
+    } else if (selectedTool === 'erase' && activeClip) {
       // Remove note logic
     }
   };
 
   const getNoteAtPosition = (noteIndex: number, tick: number) => {
-    if (!selectedClip) return null;
-    const clip = project.midiClips.find((c) => c.id === selectedClip);
-    if (!clip) return null;
-    return clip.notes.find(
+    if (!activeClip) return null;
+    return activeClip.notes.find(
       (n) => n.pitch === NOTE_TO_MIDI[NOTES[noteIndex]] && Math.abs(n.startTick - tick) < 100
     );
   };
@@ -49,6 +61,9 @@ export default function PianoRollView() {
     <div className="h-full bg-black flex flex-col">
       {/* Toolbar */}
       <div className="h-10 bg-zinc-900 border-b border-zinc-700 flex items-center gap-2 px-4 flex-shrink-0">
+        <div className="flex-1 text-sm text-zinc-400">
+          {selectedTrack ? `Editing: ${selectedTrack.name}` : 'No track selected'}
+        </div>
         <button className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-sm">Draw</button>
         <button className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-sm">Select</button>
         <button className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-sm">Erase</button>
@@ -57,7 +72,15 @@ export default function PianoRollView() {
 
       {/* Piano Roll Grid */}
       <div className="flex-1 overflow-y-auto overflow-x-auto">
-        <div className="flex" style={{ height: totalNotesHeight }}>
+        {!selectedTrack ? (
+          <div className="h-full flex items-center justify-center text-zinc-500">
+            <div className="text-center">
+              <p className="text-lg mb-2">No track selected</p>
+              <p className="text-sm">Select a track in the Playlist to start editing</p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex" style={{ height: totalNotesHeight }}>
           {/* Piano Keys */}
           <div className="w-16 bg-zinc-900 border-r border-zinc-700 flex-shrink-0" style={{ height: totalNotesHeight }}>
             {NOTES.map((note, index) => {
@@ -88,8 +111,8 @@ export default function PianoRollView() {
             ))}
 
             {/* Notes */}
-            {selectedClip && (() => {
-              const clip = project.midiClips.find((c) => c.id === selectedClip);
+            {activeClip && (() => {
+              const clip = activeClip;
               if (!clip) return null;
               return clip.notes.map((note, index) => {
                 const noteIndex = NOTES.findIndex((n) => NOTE_TO_MIDI[n] === note.pitch);
@@ -134,6 +157,7 @@ export default function PianoRollView() {
             </div>
           </div>
         </div>
+        )}
       </div>
 
       {/* Velocity Lane */}

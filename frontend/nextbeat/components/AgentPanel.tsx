@@ -90,7 +90,7 @@ export default function AgentPanel() {
         mute: false,
         solo: false,
         arm: false,
-        volume: 0.8,
+        volume: 0.5,
         pan: 0,
       });
     } else if (edit.type === 'addClip') {
