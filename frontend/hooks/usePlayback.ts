@@ -11,7 +11,7 @@ function ticksToBars(ticks: number): number {
   return ticks / TICKS_PER_BAR;
 }
 
-// Convert MIDI note number to note name
+// Convert MIDI note number to note name  
 function midiToNoteName(midiNote: number): string {
   return Tone.Frequency(midiNote, 'midi').toNote();
 }

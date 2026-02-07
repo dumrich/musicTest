@@ -36,19 +36,10 @@ export function useInstruments(tracks: Track[]) {
     });
   }, [tracks]);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      cacheRef.current.forEach((synth) => {
-        try {
-          synth.dispose();
-        } catch (error) {
-          console.error('Failed to dispose synthesizer:', error);
-        }
-      });
-      cacheRef.current.clear();
-    };
-  }, []);
+  // Note: We don't cleanup synthesizers on component unmount because:
+  // 1. The cache is shared across all components (PianoRollView, usePlayback, etc.)
+  // 2. Synthesizers should persist across view switches
+  // 3. Cleanup is handled when tracks are removed (lines 25-36)
 
   // Get synthesizer for a specific track
   const getSynthesizer = (trackId: string): Tone.ToneAudioNode | null => {
