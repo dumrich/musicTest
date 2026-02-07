@@ -1,0 +1,24 @@
+# NextBeat Backend - Core Dependencies
+# Install with: pip install -r requirements.txt
+#
+# This installs everything needed for the Claude → Post-Processing → MIDI pipeline.
+# Magenta (DrumsRNN / Music Transformer) is NOT included here because it pins
+# ancient dependency versions (mido==1.2.6, pretty-midi==0.2.9) that conflict
+# with modern packages, and only supports Python <=3.11.
+#
+# To add Magenta continuation, see requirements-magenta.txt.
+
+# Web framework
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+
+# Configuration
+pydantic>=2.5.3
+pydantic-settings>=2.1.0
+python-dotenv>=1.0.0
+
+# Claude API
+anthropic>=0.40.0
+
+# MIDI generation (lightweight, no tensorflow needed)
+mido>=1.2.6
