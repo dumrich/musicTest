@@ -50,7 +50,7 @@ interface ProjectState {
 const createDefaultProject = (): Project => ({
   id: 'default-project',
   title: 'Untitled Project',
-  tempo: 120,
+  tempo: 240,
   timeSignature: { numerator: 4, denominator: 4 },
   tracks: [],
   patterns: [],

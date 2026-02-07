@@ -297,7 +297,7 @@ export default function PianoRollView() {
                 return (
                   <div
                     key={index}
-                    className="absolute bg-blue-500 border border-blue-400 rounded cursor-move"
+                    className="absolute bg-blue-500 border border-blue-400 cursor-move"
                     style={{
                       top: `${noteIndex * noteHeight}px`,
                       left: `${stepPosition * pixelsPerBar}px`,

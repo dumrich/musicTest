@@ -7,21 +7,25 @@ import AgentPanel from '@/components/AgentPanel';
 import BottomBar from '@/components/BottomBar';
 import { useProjectStore } from '@/stores/projectStore';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useInstruments } from '@/hooks/useInstruments';
 
 export default function DAW() {
   const { project, addTrack, selectedTrackId, setSelectedTrackId } = useProjectStore();
   useKeyboardShortcuts();
+  
+  // Initialize synthesizers for all tracks
+  useInstruments(project?.tracks || []);
 
   // Initialize with a default track if none exist
   useEffect(() => {
     if (project && project.tracks.length === 0) {
       addTrack({
         id: 'track-1',
-        name: 'Track 1',
+        name: 'Piano',
         color: '#3b82f6',
         type: 'instrument',
         channelRackIds: [],
-        instrument: null,
+        instrument: 'piano', // Assign default piano instrument
         mixerChannelId: null,
         mute: false,
         solo: false,

@@ -1,6 +1,7 @@
 'use client';
 
 import { useProjectStore } from '@/stores/projectStore';
+import { usePlayback } from '@/hooks/usePlayback';
 import * as Tone from 'tone';
 
 export default function TransportBar() {
@@ -21,15 +22,24 @@ export default function TransportBar() {
     setSongLength,
   } = useProjectStore();
 
+  // Initialize playback system
+  usePlayback(project, isPlaying, project?.tempo || 120, snapGrid, setPlayheadPosition);
+
   const handlePlayPause = async () => {
     if (!isPlaying) {
       await Tone.start();
       if (project) {
+        console.log(project.midiClips);
         Tone.getTransport().bpm.value = project.tempo;
+        // Start from current playhead position
+        // Convert bars to seconds: (bars * 4 beats/bar) / (bpm / 60)
+        const startSeconds = (playheadPosition * 4 * 60) / project.tempo;
+        Tone.getTransport().seconds = startSeconds;
         Tone.getTransport().start();
       }
       setIsPlaying(true);
     } else {
+      // Pause: stop but keep current position (position is maintained in playheadPosition)
       Tone.getTransport().stop();
       setIsPlaying(false);
     }
@@ -38,13 +48,22 @@ export default function TransportBar() {
   const handleStop = () => {
     Tone.getTransport().stop();
     Tone.getTransport().cancel();
-    Tone.getTransport().position = 0;
+    Tone.getTransport().seconds = 0;
     setIsPlaying(false);
     setPlayheadPosition(0);
   };
 
   const handleRewind = () => {
-    Tone.getTransport().position = 0;
+    if (isPlaying) {
+      // If playing, stop and reset
+      Tone.getTransport().stop();
+      Tone.getTransport().cancel();
+      Tone.getTransport().seconds = 0;
+      setIsPlaying(false);
+    } else {
+      // If paused, just reset position
+      Tone.getTransport().seconds = 0;
+    }
     setPlayheadPosition(0);
   };
 
